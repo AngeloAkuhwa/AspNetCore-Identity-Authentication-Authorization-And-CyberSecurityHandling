@@ -1,5 +1,6 @@
 ﻿using IdentityNetCore.Models;
 using IdentityNetCore.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -105,6 +106,45 @@ namespace IdentityNetCore.Controllers
             }
             return View(model);
         }
+
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> MultiFactorAuthenticationSetUp()
+        {
+            const string provider = "asp.netIdentity";
+            var loggedInUser = await userManager.GetUserAsync(User);
+
+            await userManager.ResetAuthenticatorKeyAsync(loggedInUser);
+
+            var token = await userManager.GetAuthenticatorKeyAsync(loggedInUser);
+
+            var qrCodeUrl = $"otpauth://totp/{provider}:{loggedInUser.Email}?secret={token}&issuer={provider}&digits=6";
+
+            MultiFactorAuthViewModel multiFactorAuth = new MultiFactorAuthViewModel { Token = token,QRCodeUrl =qrCodeUrl };
+
+            return View(multiFactorAuth);
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> MultiFactorAuthenticationSetUp(MultiFactorAuthViewModel model)
+        {
+            var loggedInUser = await userManager.GetUserAsync(User);
+
+           var succeeded = await userManager.VerifyTwoFactorTokenAsync(loggedInUser, userManager.Options.Tokens.AuthenticatorTokenProvider, model.Code);
+            if (succeeded)
+            {
+                await userManager.SetTwoFactorEnabledAsync(loggedInUser,true); 
+            }
+            else
+            {
+                ModelState.AddModelError("Verify","Your MFA code could not be validated");
+            }
+
+
+            return View(model);
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> ConfirmEmail(string userId,string token)
