@@ -1,6 +1,10 @@
 ﻿@model IdentityNetCore.Models.SignInViewModel
+@using Microsoft.AspNetCore.Identity;
+@inject SignInManager<IdentityUser> signInManager
 @{
     ViewData["Title"] = "SignIn";
+
+    var providers = await signInManager.GetExternalAuthenticationSchemesAsync();
 }
 
 <h1>SignIn</h1>
@@ -20,5 +24,22 @@
         <label asp-for="RememberMe"></label>
         <input type="checkbox" asp-for="RememberMe" class="form-control" />Remember Me
     </div>
+
+    <button type="submit" class="btn btn-primary">SignIn</button>
+</form>
+
+<p>
+    social media login
+</p>
+<form asp-controller="Identity" asp-action="ExternalLoginWithFacebook" method="post">
+
+    <div class="form-group">
+        @foreach (var provider in providers)
+        {
+            <button type="submit" name="provider" value="@provider.Name" class="btn btn-primary">Login with @provider.DisplayName</button>
+        }
+
+    </div>
+
 </form>
 

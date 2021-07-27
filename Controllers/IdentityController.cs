@@ -3,8 +3,6 @@ using IdentityNetCore.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -120,7 +118,7 @@ namespace IdentityNetCore.Controllers
 
             var qrCodeUrl = $"otpauth://totp/{provider}:{loggedInUser.Email}?secret={token}&issuer={provider}&digits=6";
 
-            MultiFactorAuthViewModel multiFactorAuth = new MultiFactorAuthViewModel { Token = token,QRCodeUrl =qrCodeUrl };
+            MultiFactorAuthViewModel multiFactorAuth = new MultiFactorAuthViewModel { Token = token,QRCodeUrl =qrCodeUrl};
 
             return View(multiFactorAuth);
         }
@@ -197,6 +195,38 @@ namespace IdentityNetCore.Controllers
             }
 
             return View(model) ;
+        }
+
+
+        [HttpPost]
+        public IActionResult ExternalLoginWithFacebook(string provider, string returnURL = null)
+        {
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, returnURL);
+            var callBackURL = Url.Action("ExternalLoginCallBack");
+            properties.RedirectUri = callBackURL;
+            return Challenge(properties, provider);
+        }
+
+        public async Task<IActionResult> ExternalLoginCallBack()
+        {
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+
+            var emailClaim = info.Principal.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email);
+
+            var user = new IdentityUser { Email = emailClaim.Value, UserName = emailClaim.Value };
+
+            var isUserExist = await userManager.FindByEmailAsync(user.Email);
+
+            if(isUserExist == null)
+            {
+                var createUser = await userManager.CreateAsync(user);
+
+                var linkFacebookToCurrentUser = await userManager.AddLoginAsync(user, info);
+            }
+
+            await _signInManager.SignInAsync(user,false); 
+
+            return RedirectToAction("Home","Index");
         }
         public IActionResult AccessDenied()
         {

@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using IdentityNetCore.Data;
 using IdentityNetCore.Service;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -11,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 
 namespace IdentityNetCore
 {
@@ -35,7 +38,7 @@ namespace IdentityNetCore
                 options.Password.RequireNonAlphanumeric = false;
                 options.Lockout.MaxFailedAccessAttempts = 3;
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
-                options.SignIn.RequireConfirmedEmail = true;
+               // options.SignIn.RequireConfirmedEmail = true;
             
             });
 
@@ -58,12 +61,38 @@ namespace IdentityNetCore
                 });
             });
 
+            services.AddAuthentication().AddFacebook(options => {
+
+                options.AppId = Configuration["FacebookAppId"];
+                options.AppSecret = Configuration["FacebookAppSecret"];
+            });
+
             services.AddControllersWithViews();
 
             services.ConfigureApplicationCookie(options => {
 
                 options.LoginPath = "/Identity/SignIn";
                 options.AccessDeniedPath = "/Identity.AccessDenied";
+            });
+
+            
+            
+
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options => {
+
+                options.RequireHttpsMetadata = false;
+                options.SaveToken = true;
+                options.TokenValidationParameters = new TokenValidationParameters {
+                    ValidAudience = Configuration["Tokens:Audience"],
+                    ValidIssuer = Configuration["Tokens:Issuer"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Tokens:Key"]))
+
+                };
             });
 
         }

@@ -158,3 +158,5 @@ C:\Users\hp\source\C#\LIfeProjects_worked_On\Asp-netcore-authentication-authoriz
 C:\Users\hp\source\C#\LIfeProjects_worked_On\Asp-netcore-authentication-authorization\asp-net-core-identity-v2\Starter\IdentityNetCore\obj\Debug\netcoreapp3.1\Razor\Views\Identity\SignUp.cshtml.g.cs
 C:\Users\hp\source\C#\LIfeProjects_worked_On\Asp-netcore-authentication-authorization\asp-net-core-identity-v2\Starter\IdentityNetCore\obj\Debug\netcoreapp3.1\Razor\Views\Identity\SignIn.cshtml.g.cs
 C:\Users\hp\source\C#\LIfeProjects_worked_On\Asp-netcore-authentication-authorization\asp-net-core-identity-v2\Starter\IdentityNetCore\obj\Debug\netcoreapp3.1\Razor\Views\Shared\_Identity.cshtml.g.cs
+C:\Users\hp\source\C#\LIfeProjects_worked_On\Asp-netcore-authentication-authorization\asp-net-core-identity-v2\Starter\IdentityNetCore\obj\Debug\netcoreapp3.1\Razor\Views\Identity\MultiFactorAuthenticationSetUp.cshtml.g.cs
+C:\Users\hp\source\C#\LIfeProjects_worked_On\Asp-netcore-authentication-authorization\asp-net-core-identity-v2\Starter\IdentityNetCore\bin\Debug\netcoreapp3.1\Microsoft.AspNetCore.Authentication.Facebook.dll
