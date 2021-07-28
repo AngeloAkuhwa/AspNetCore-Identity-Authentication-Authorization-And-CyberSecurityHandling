@@ -1,16 +1,38 @@
 ﻿
 @{
-    var loggedInUser = User.Identity.IsAuthenticated;
+
+    var loggedIn = User.Identity.IsAuthenticated;
+    var userRole = User.IsInRole("Member");
+    var adminRole = User.IsInRole("Admin");
+
 }
 
-@if (loggedInUser)
+@if (loggedIn && userRole)
 {
+
 
     <li class="nav-item">
         <a class="nav-link text-dark" asp-area="" asp-controller="Identity" asp-action="SignOut">SignOut</a>
     </li>
-    
-    <label>Welcome @User.Identity.Name @User.Claims.FirstOrDefault(x =>x.Type == "Department")</label>
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-area="" asp-controller="Identity" asp-action="MultiFactorAuthenticationSetUp">2FactorAuthentication</a>
+    </li>
+
+    <label class="align-content-center justify-content-center">Welcome @User.Identity.Name @User.Claims.FirstOrDefault(x => x.Type == "Department")</label>
+}
+else if (loggedIn && adminRole)
+{
+
+
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-area="" asp-controller="Identity" asp-action="SignOut">SignOut</a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link text-dark" asp-area="" asp-controller="Identity" asp-action="MultiFactorAuthenticationSetUp">2FactorAuthentication</a>
+    </li>
+
+    <label class="align-content-center justify-content-center">Welcome @User.Identity.Name @User.Claims.FirstOrDefault(x => x.Type == "Department")</label>
 }
 else
 {
@@ -21,5 +43,4 @@ else
     <li class="nav-item">
         <a class="nav-link text-dark" asp-area="" asp-controller="Identity" asp-action="SignIn">SignIn</a>
     </li>
-
 }

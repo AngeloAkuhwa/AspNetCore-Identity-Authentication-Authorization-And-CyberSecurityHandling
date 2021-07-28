@@ -5,9 +5,11 @@ using System.Text;
 using System.Threading.Tasks;
 using IdentityNetCore.Data;
 using IdentityNetCore.Service;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -48,18 +50,22 @@ namespace IdentityNetCore
 
             services.AddAuthorization(options =>
             {
-                options.AddPolicy("MemberDepartment", policy =>{
+                options.AddPolicy("MemberDepartment", policy =>
+                {
 
-                    policy.RequireClaim("Department", "tech").RequireRole("Member");
+                    policy.RequireClaim("Department", "Tech").RequireRole("Member");
 
                 });
 
-                options.AddPolicy("AdminDepartment", policy => {
+                options.AddPolicy("AdminDepartment", policy =>
+                {
 
-                    policy.RequireClaim("Department", "tech").RequireRole("Admin");
+                    policy.RequireClaim("Department", "Tech").RequireRole("Admin");
 
                 });
             });
+
+            services.AddAuthorization();
 
             services.AddAuthentication().AddFacebook(options => {
 
@@ -70,31 +76,11 @@ namespace IdentityNetCore
             services.AddControllersWithViews();
 
             services.ConfigureApplicationCookie(options => {
-
                 options.LoginPath = "/Identity/SignIn";
-                options.AccessDeniedPath = "/Identity.AccessDenied";
+                options.AccessDeniedPath = "/Identity/AccessDenied";
+   
+
             });
-
-            
-            
-
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options => {
-
-                options.RequireHttpsMetadata = false;
-                options.SaveToken = true;
-                options.TokenValidationParameters = new TokenValidationParameters {
-                    ValidAudience = Configuration["Tokens:Audience"],
-                    ValidIssuer = Configuration["Tokens:Issuer"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Tokens:Key"]))
-
-                };
-            });
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -111,9 +97,12 @@ namespace IdentityNetCore
             app.UseStaticFiles();
 
             app.UseRouting();
+           
+           
             app.UseAuthentication();
 
             app.UseAuthorization();
+           
 
             app.UseEndpoints(endpoints =>
             {

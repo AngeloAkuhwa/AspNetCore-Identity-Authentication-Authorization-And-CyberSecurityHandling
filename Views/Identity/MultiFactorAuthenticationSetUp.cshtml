@@ -20,7 +20,7 @@
 
 <form asp-controller="Identity" asp-action="MultiFactorAuthenticationSetUp" method="post">
     <input type="hidden" asp-for="Token" />
-
+    @Html.ValidationSummary()
     <div class="form-group">
         Enter Code: <input type="text" class="form-control" asp-for="Code" />
     </div>
@@ -34,9 +34,9 @@
 
 @section scripts
 {
-    <script src="~/js/qrcode.js" asp-append-version="true"></script>
+    <script src="~/js/qrcode.js" asp-append-version="true"></script>=
 
     <script type="text/javascript">
-        new QRCode(document.getElementById("qrcode"), "@Model.QRCodeUrl");
+        new QRCode(document.getElementById("qrCode"), "@Model.QRCodeUrl");
     </script>
 }

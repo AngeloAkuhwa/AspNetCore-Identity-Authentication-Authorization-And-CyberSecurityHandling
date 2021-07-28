@@ -7,16 +7,20 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using IdentityNetCore.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
 namespace IdentityNetCore.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly UserManager<IdentityUser> userManager;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, UserManager<IdentityUser> userManager)
         {
             _logger = logger;
+            this.userManager = userManager;
         }
 
         public IActionResult Index()
@@ -24,16 +28,22 @@ namespace IdentityNetCore.Controllers
             return View();
         }
 
+     
         [Authorize(Policy = "MemberDepartment")]
         public IActionResult Member()
         {
-            return View();
+            
+             return View();
+            
         }
+
 
         [Authorize(Policy = "AdminDepartment")]
         public IActionResult Admin()
         {
-            return View();
+           
+              return View();
+           
         }
 
 

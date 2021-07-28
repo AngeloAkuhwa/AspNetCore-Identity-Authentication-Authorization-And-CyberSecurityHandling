@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Principal;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace IdentityNetCore.Controllers
@@ -105,8 +107,9 @@ namespace IdentityNetCore.Controllers
             return View(model);
         }
 
-        [Authorize]
+       
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> MultiFactorAuthenticationSetUp()
         {
             const string provider = "asp.netIdentity";
@@ -123,8 +126,9 @@ namespace IdentityNetCore.Controllers
             return View(multiFactorAuth);
         }
 
-        [Authorize]
+        
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> MultiFactorAuthenticationSetUp(MultiFactorAuthViewModel model)
         {
             var loggedInUser = await userManager.GetUserAsync(User);
@@ -132,7 +136,8 @@ namespace IdentityNetCore.Controllers
            var succeeded = await userManager.VerifyTwoFactorTokenAsync(loggedInUser, userManager.Options.Tokens.AuthenticatorTokenProvider, model.Code);
             if (succeeded)
             {
-                await userManager.SetTwoFactorEnabledAsync(loggedInUser,true); 
+                await userManager.SetTwoFactorEnabledAsync(loggedInUser,true);
+                return View("SuccessAuth");
             }
             else
             {
@@ -143,6 +148,11 @@ namespace IdentityNetCore.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        public IActionResult SuccessAuth()
+        {
+            return View();
+        }
 
         [HttpPost]
         public async Task<IActionResult> ConfirmEmail(string userId,string token)
@@ -169,24 +179,43 @@ namespace IdentityNetCore.Controllers
             if (ModelState.IsValid)
             {
                 var result = await _signInManager.PasswordSignInAsync(model.UserName, model.Password, model.RememberMe, false);
+                
+                var user1 = HttpContext.User;
                 if (result.Succeeded)
                 {
+                  
+
                     var user = await userManager.FindByEmailAsync(model.UserName);
 
                     var userClaims = await userManager.GetClaimsAsync(user);
+                    var isInAdminRole = await userManager.IsInRoleAsync(user, "Admin");
+                    var isInUserRole = await userManager.IsInRoleAsync(user, "Member");
 
-                    if(!userClaims.Any(x => x.Type == "Department"))
+                    if (!userClaims.Any(x => x.Type == "Department"))
                     {
                         ModelState.AddModelError("Department", "user does not have a department");
                         return View(model);
                     }
 
-                    if(await userManager.IsInRoleAsync(user, "Member"))
+                    if(isInUserRole)
                     {
                         return RedirectToAction("Member", "Home");
                     }
+                    else if(isInAdminRole)
+                    {
+                        return RedirectToAction("Admin", "Home");
+                    }
+                    else
+                    {
+                        return RedirectToAction("AccessDenied");
 
-                   
+                    }
+
+
+                }
+                else if(result.RequiresTwoFactor)
+                {
+                   return RedirectToAction("MFACheck");
                 }
                 else
                 {
@@ -197,6 +226,25 @@ namespace IdentityNetCore.Controllers
             return View(model) ;
         }
 
+        [HttpGet]
+        public IActionResult MFACheck()
+        {
+            return View(new MFACheckViewModel());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> MFACheck(MFACheckViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(model.Code, false, false);
+                if (result.Succeeded)
+                {
+                    return RedirectToAction("Index", "Home", null);
+                }
+            }
+            return View(model);
+        }
 
         [HttpPost]
         public IActionResult ExternalLoginWithFacebook(string provider, string returnURL = null)
@@ -213,6 +261,13 @@ namespace IdentityNetCore.Controllers
 
             var emailClaim = info.Principal.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Email);
 
+            if (emailClaim == null)
+            {
+                ModelState.AddModelError("", "ooops, No existing email on current provider's account");
+
+                return RedirectToAction("AccessDenied");
+            }
+            
             var user = new IdentityUser { Email = emailClaim.Value, UserName = emailClaim.Value };
 
             var isUserExist = await userManager.FindByEmailAsync(user.Email);
